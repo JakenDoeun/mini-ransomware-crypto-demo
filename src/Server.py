@@ -171,7 +171,7 @@ def main():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((SERVER_IP, SERVER_PORT))
     server_socket.listen(5)
-
+    
     # start manual key release thread
     threading.Thread(
         target=manual_decrypt_loop,
@@ -182,7 +182,9 @@ def main():
     print(f"[*] Listening on {SERVER_IP}:{SERVER_PORT}")
 
     while True:
+        #notify client connection
         client_sock, addr = server_socket.accept()
+        print(f"[*] Client connected: {addr}")  
         threading.Thread(
             target=handle_client,
             args=(client_sock, addr, public_pem),
