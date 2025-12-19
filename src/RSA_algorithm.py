@@ -3,6 +3,10 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.backends import default_backend
 import socketserver, struct, json
 
+def load_public_key(pem_bytes: bytes):
+    #load pem-formatted public key to return public key object
+    return serialization.load_pem_public_key(pem_bytes, backend=default_backend())
+
 def generate_rsa_keypair():
     private_key = rsa.generate_private_key(
         public_exponent=65537,
@@ -27,7 +31,6 @@ def serialize_key(key, is_private=False) -> bytes:
         )
 
 def encryption_rsa(public_key, message: bytes) -> bytes:
-    
     ciphertext = public_key.encrypt(
         message,
         padding.OAEP(
