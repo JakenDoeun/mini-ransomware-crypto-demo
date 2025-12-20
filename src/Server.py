@@ -83,6 +83,9 @@ def load_or_create_rsa_keys():
 #client handler
 def handle_client(sock, addr, server_public_pem):
     try:
+        #display client connection  
+        print(f"Client connected: {addr}")
+
         request = recv_json(sock)
         client_id = request.get("client_id")
         action = request.get("action")
